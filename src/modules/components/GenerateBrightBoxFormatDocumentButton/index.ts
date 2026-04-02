@@ -1,0 +1,1 @@
+export { GenerateBrightboxFormatDocumentButton } from "./GenerateBrightboxFormatDocumentButton";
