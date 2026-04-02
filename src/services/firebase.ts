@@ -2,11 +2,17 @@ import { initializeApp } from "firebase/app";
 import {
   getAuth,
   GoogleAuthProvider,
-  signInWithPopup,
+  signInWithCredential,
   signOut,
   onAuthStateChanged,
   User,
 } from "firebase/auth";
+
+declare global {
+  interface Window {
+    google?: typeof google;
+  }
+}
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -23,25 +29,70 @@ export const auth = getAuth(app);
 // Netlify Functions endpoints
 const NETLIFY_FUNCTIONS_URL = "/.netlify/functions";
 
-export const googleProvider = new GoogleAuthProvider();
+let tokenClient: google.accounts.oauth2.CodeClient | null = null;
+let currentCodeResolver: ((code: string | null) => void) | null = null;
 
-// Request Google Drive scope to access user's documents
-googleProvider.addScope("https://www.googleapis.com/auth/drive.readonly");
-googleProvider.addScope("https://www.googleapis.com/auth/documents.readonly");
-googleProvider.addScope("https://www.googleapis.com/auth/drive.file");
+const initCodeClient = () => {
+  if (!window.google || tokenClient) return;
 
-// Force consent screen to get access token
-googleProvider.setCustomParameters({
-  prompt: "consent",
-  access_type: "offline",
-});
+  tokenClient = window.google.accounts.oauth2.initCodeClient({
+    client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || "",
+    scope:
+      "https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/documents.readonly https://www.googleapis.com/auth/drive.file",
+    ux_mode: "popup",
+    select_account: true,
+    callback: (response) => {
+      if (currentCodeResolver) {
+        currentCodeResolver(response.code || null);
+        currentCodeResolver = null;
+      }
+    },
+  });
+};
 
-export const signInWithGoogle = async () => {
+export const requestAuthorizationCode = (): Promise<string | null> => {
+  return new Promise((resolve) => {
+    if (!window.google) {
+      resolve(null);
+      return;
+    }
+
+    initCodeClient();
+    currentCodeResolver = resolve;
+    tokenClient?.requestCode();
+  });
+};
+
+export const signInWithGoogle = async (): Promise<{
+  user: User;
+  accessToken: string;
+  refreshToken?: string;
+}> => {
   try {
-    const result = await signInWithPopup(auth, googleProvider);
-    const credential = GoogleAuthProvider.credentialFromResult(result);
-    const token = credential?.accessToken;
-    return { user: result.user, token };
+    // Step 1: Get authorization code from Google Identity Services
+    const code = await requestAuthorizationCode();
+    if (!code) {
+      throw new Error("Failed to get authorization code");
+    }
+
+    // Step 2: Exchange code for tokens via Netlify Function
+    const tokenResponse = await fetch(`${NETLIFY_FUNCTIONS_URL}/exchange-code`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code }),
+    });
+
+    if (!tokenResponse.ok) {
+      throw new Error("Failed to exchange code for tokens");
+    }
+
+    const { accessToken, refreshToken, idToken } = await tokenResponse.json();
+
+    // Step 3: Sign in to Firebase with the Google ID token
+    const credential = GoogleAuthProvider.credential(idToken);
+    const result = await signInWithCredential(auth, credential);
+
+    return { user: result.user, accessToken, refreshToken };
   } catch (error) {
     console.error("Google sign-in error:", error);
     throw error;

@@ -15,4 +15,16 @@ module.exports = {
     "prettier/prettier": ["error"],
     // "no-console": ["warn"],
   },
+  overrides: [
+    {
+      files: ["netlify/functions/**/*.js"],
+      env: { node: true },
+      parser: null,
+      plugins: ["prettier"],
+      rules: {
+        "@typescript-eslint/no-var-requires": "off",
+        "prettier/prettier": ["error"],
+      },
+    },
+  ],
 };

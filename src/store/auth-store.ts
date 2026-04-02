@@ -1,17 +1,12 @@
 import { makeAutoObservable, runInAction } from "mobx";
 import type { User } from "firebase/auth";
-import {
-  onAuthStateChange,
-  signInWithGoogle,
-  signOutUser,
-  getIdToken,
-  requestGoogleAccessToken,
-} from "@/services/firebase";
+import { onAuthStateChange, signInWithGoogle, signOutUser, getIdToken } from "@/services/firebase";
+
+const NETLIFY_FUNCTIONS_URL = "/.netlify/functions";
 
 export class AuthStore {
   user: User | null = null;
   googleAccessToken: string | null = null;
-  googleRefreshToken: string | null = null; // Store in memory only
   firebaseToken: string | null = null;
   isLoading = true;
   error: string | null = null;
@@ -41,23 +36,40 @@ export class AuthStore {
     });
   }
 
-  // Get or refresh Google access token automatically
+  // Get or refresh Google access token from server
   getGoogleAccessToken = async (): Promise<string | null> => {
     // If we have token in memory, use it
     if (this.googleAccessToken) {
       return this.googleAccessToken;
     }
 
-    // If we have refresh token, use server to get new access token
-    if (this.user && this.googleRefreshToken) {
+    // Request from server using stored refresh token
+    if (this.user && this.firebaseToken) {
       try {
-        const token = await requestGoogleAccessToken(this.googleRefreshToken);
-        if (token) {
+        const response = await fetch(`${NETLIFY_FUNCTIONS_URL}/google-token`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "getAccessToken",
+            uid: this.user.uid,
+          }),
+        });
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            // No refresh token stored
+            return null;
+          }
+          throw new Error("Failed to get access token");
+        }
+
+        const data = await response.json();
+        if (data.accessToken) {
           runInAction(() => {
-            this.googleAccessToken = token;
+            this.googleAccessToken = data.accessToken;
           });
         }
-        return token;
+        return data.accessToken || null;
       } catch {
         return null;
       }
@@ -66,13 +78,39 @@ export class AuthStore {
     return null;
   };
 
+  // Store refresh token on server
+  storeRefreshTokenOnServer = async (refreshToken: string): Promise<boolean> => {
+    if (!this.user) return false;
+
+    try {
+      const response = await fetch(`${NETLIFY_FUNCTIONS_URL}/google-token`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "store",
+          uid: this.user.uid,
+          refreshToken,
+        }),
+      });
+
+      return response.ok;
+    } catch {
+      return false;
+    }
+  };
+
   signInWithGoogle = async () => {
     this.error = null;
     try {
-      const { user, token } = await signInWithGoogle();
+      const { user, accessToken, refreshToken } = await signInWithGoogle();
+      // Store refresh token on server if available
+      if (refreshToken) {
+        await this.storeRefreshTokenOnServer(refreshToken);
+      }
+
       runInAction(() => {
         this.user = user;
-        this.googleAccessToken = token || null;
+        this.googleAccessToken = accessToken || null;
       });
     } catch (error) {
       runInAction(() => {
@@ -87,18 +125,12 @@ export class AuthStore {
     runInAction(() => {
       this.user = null;
       this.googleAccessToken = null;
-      this.googleRefreshToken = null;
       this.firebaseToken = null;
     });
   };
 
   clearGoogleToken = () => {
     this.googleAccessToken = null;
-    this.googleRefreshToken = null;
-  };
-
-  setRefreshToken = (token: string) => {
-    this.googleRefreshToken = token;
   };
 
   get isAuthenticated() {
