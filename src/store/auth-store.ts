@@ -1,6 +1,14 @@
 import { makeAutoObservable, runInAction } from "mobx";
 import type { User } from "firebase/auth";
-import { onAuthStateChange, signInWithGoogle, signOutUser, getIdToken } from "@/services/firebase";
+import {
+  onAuthStateChange,
+  signInWithGoogle,
+  signOutUser,
+  getIdToken,
+  requestAuthorizationCode,
+  exchangeCodeForRefreshToken,
+  storeRefreshTokenOnServer,
+} from "@/services/firebase";
 
 const NETLIFY_FUNCTIONS_URL = "/.netlify/functions";
 
@@ -76,6 +84,36 @@ export class AuthStore {
     }
 
     return null;
+  };
+
+  // Ensure we have Google access token - re-authorize if needed
+  ensureGoogleAccessToken = async (): Promise<string | null> => {
+    // Try to get existing token
+    let token = await this.getGoogleAccessToken();
+    if (token) return token;
+
+    // No refresh token stored - need to re-authorize
+    if (!this.user) return null;
+
+    try {
+      // Request new authorization code
+      const code = await requestAuthorizationCode();
+      if (!code) return null;
+
+      // Exchange for refresh token
+      const refreshToken = await exchangeCodeForRefreshToken(code);
+      if (!refreshToken) return null;
+
+      // Store on server
+      const stored = await storeRefreshTokenOnServer(this.user.uid, refreshToken);
+      if (!stored) return null;
+
+      // Now get access token using stored refresh token
+      token = await this.getGoogleAccessToken();
+      return token;
+    } catch {
+      return null;
+    }
   };
 
   // Store refresh token on server

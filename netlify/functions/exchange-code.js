@@ -63,10 +63,16 @@ exports.handler = async (event) => {
     };
   } catch (error) {
     console.error("Error exchanging code:", error);
+    console.error("Error details:", error.response?.data || error.message);
+    console.error("Client ID present:", !!process.env.GOOGLE_CLIENT_ID);
+    console.error("Client Secret present:", !!process.env.GOOGLE_CLIENT_SECRET);
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: "Failed to exchange code" }),
+      body: JSON.stringify({
+        error: "Failed to exchange code",
+        details: error.response?.data?.error_description || error.message,
+      }),
     };
   }
 };

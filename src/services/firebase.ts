@@ -28,6 +28,25 @@ export const auth = getAuth(app);
 
 // Netlify Functions endpoints
 const NETLIFY_FUNCTIONS_URL = "/.netlify/functions";
+export const storeRefreshTokenOnServer = async (
+  uid: string,
+  refreshToken: string,
+): Promise<boolean> => {
+  try {
+    const response = await fetch(`${NETLIFY_FUNCTIONS_URL}/google-token`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "store",
+        uid,
+        refreshToken,
+      }),
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+};
 
 let tokenClient: google.accounts.oauth2.CodeClient | null = null;
 let currentCodeResolver: ((code: string | null) => void) | null = null;
