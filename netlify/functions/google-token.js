@@ -1,7 +1,7 @@
 const { google } = require("googleapis");
 const { getStore } = require("@netlify/blobs");
 
-exports.handler = async (event, context) => {
+exports.handler = async (event) => {
   const headers = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
@@ -44,10 +44,13 @@ exports.handler = async (event, context) => {
         };
       }
 
-      await store.setJSON(uid, {
-        refreshToken,
-        updatedAt: new Date().toISOString(),
-      });
+      await store.set(
+        uid,
+        JSON.stringify({
+          refreshToken,
+          updatedAt: new Date().toISOString(),
+        }),
+      );
       console.log("[google-token] Stored token for UID:", uid);
 
       return {
@@ -68,7 +71,8 @@ exports.handler = async (event, context) => {
         };
       }
 
-      const stored = await store.getJSON(uid, { type: "json" });
+      const data = await store.get(uid);
+      const stored = data ? JSON.parse(data) : null;
       console.log("[google-token] Looking up token for UID:", uid, "Found:", !!stored);
 
       if (!stored) {
