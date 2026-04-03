@@ -8,8 +8,12 @@ exports.handler = async (event, context) => {
     "Access-Control-Allow-Methods": "POST, OPTIONS",
   };
 
-  // Initialize Netlify Blobs store (works automatically in Netlify Functions)
-  const store = getStore("tokens");
+  // Initialize Netlify Blobs store
+  const store = getStore({
+    name: "tokens",
+    siteID: process.env.NETLIFY_SITE_ID,
+    token: process.env.NETLIFY_BLOBS_TOKEN,
+  });
 
   console.log("[google-token] Request:", event.httpMethod);
 
