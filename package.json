@@ -29,6 +29,7 @@
     "react": "^18.2.0",
     "react-doc-viewer": "^0.1.5",
     "react-dom": "^18.2.0",
+    "react-router-dom": "^7.14.0",
     "styled-components": "^6.1.8"
   },
   "devDependencies": {

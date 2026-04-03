@@ -1,4 +1,4 @@
-import { Controls, Header, ButtonGroup, Block } from "./styles";
+import { Controls, Header, ButtonGroup, Block, Footer } from "./styles";
 import { Button } from "antd";
 import { LogoutOutlined } from "@ant-design/icons";
 import { ListProjects } from "@/modules/components/ListProjects";
@@ -70,6 +70,9 @@ export const MainPage = observer(() => {
         <TableSection />
         <SummarizingField />
       </Block>
+      <Footer>
+        <a href="/privacy">Privacy Policy</a> | <a href="/terms">Terms of Service</a>
+      </Footer>
     </>
   );
 });
