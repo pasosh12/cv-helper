@@ -107,6 +107,16 @@ export const signInWithGoogle = async (): Promise<{
 
     const { accessToken, refreshToken, idToken } = await tokenResponse.json();
 
+    console.log("Token exchange response:", {
+      accessToken: !!accessToken,
+      refreshToken: !!refreshToken,
+      idToken: !!idToken,
+    });
+
+    if (!idToken) {
+      throw new Error("ID token is missing from server response");
+    }
+
     // Step 3: Sign in to Firebase with the Google ID token
     const credential = GoogleAuthProvider.credential(idToken);
     const result = await signInWithCredential(auth, credential);
