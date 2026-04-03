@@ -166,26 +166,3 @@ export const exchangeCodeForRefreshToken = async (code: string): Promise<string 
     return null;
   }
 };
-
-/**
- * Get new access token using refresh token via Netlify Function
- */
-export const requestGoogleAccessToken = async (refreshToken: string): Promise<string | null> => {
-  try {
-    const response = await fetch(`${NETLIFY_FUNCTIONS_URL}/refresh-token`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refreshToken }),
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to refresh token");
-    }
-
-    const data = await response.json();
-    return data.accessToken;
-  } catch (error) {
-    console.error("Error refreshing token:", error);
-    return null;
-  }
-};

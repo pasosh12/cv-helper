@@ -1,38 +1,24 @@
 const { google } = require("googleapis");
 const { getStore } = require("@netlify/blobs");
 
-// Fallback in-memory store for local development
-const localTokenStore = new Map();
-
-// Initialize store - uses Netlify Blobs in production, in-memory for local dev
+// Initialize Netlify Blobs store
 const getTokenStore = () => {
-  // Check if running in production Netlify environment
-  if (process.env.NETLIFY_SITE_ID && process.env.NETLIFY_BLOBS_TOKEN) {
-    return {
-      type: "blobs",
-      store: getStore({
-        name: "tokens",
-        siteID: process.env.NETLIFY_SITE_ID,
-        token: process.env.NETLIFY_BLOBS_TOKEN,
-      }),
-      async set(key, value) {
-        await this.store.set(key, value);
-      },
-      async get(key) {
-        return await this.store.get(key);
-      },
-    };
+  if (!process.env.NETLIFY_SITE_ID || !process.env.NETLIFY_BLOBS_TOKEN) {
+    throw new Error("Missing NETLIFY_SITE_ID or NETLIFY_BLOBS_TOKEN environment variables");
   }
 
-  // Local development fallback
-  console.log("[google-token] Using in-memory store (local dev)");
+  const store = getStore({
+    name: "tokens",
+    siteID: process.env.NETLIFY_SITE_ID,
+    token: process.env.NETLIFY_BLOBS_TOKEN,
+  });
+
   return {
-    type: "memory",
     async set(key, value) {
-      localTokenStore.set(key, value);
+      await store.set(key, value);
     },
     async get(key) {
-      return localTokenStore.get(key);
+      return await store.get(key);
     },
   };
 };
@@ -44,8 +30,19 @@ exports.handler = async (event) => {
     "Access-Control-Allow-Methods": "POST, OPTIONS",
   };
 
-  const store = getTokenStore();
-  console.log("[google-token] Request:", event.httpMethod, "Store type:", store.type);
+  let store;
+  try {
+    store = getTokenStore();
+  } catch (error) {
+    console.error("[google-token] Store initialization error:", error.message);
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({ error: error.message }),
+    };
+  }
+
+  console.log("[google-token] Request:", event.httpMethod);
 
   if (event.httpMethod === "OPTIONS") {
     return { statusCode: 200, headers };
