@@ -1,8 +1,5 @@
 const { google } = require("googleapis");
-
-// Simple in-memory storage for demo (replace with Firestore in production)
-// In production, use Firestore: const admin = require('firebase-admin');
-const tokenStore = new Map();
+const { getStore } = require("@netlify/blobs");
 
 exports.handler = async (event, context) => {
   const headers = {
@@ -11,8 +8,10 @@ exports.handler = async (event, context) => {
     "Access-Control-Allow-Methods": "POST, OPTIONS",
   };
 
-  console.log("[google-token] Request:", event.httpMethod, "Store size:", tokenStore.size);
-  console.log("[google-token] Store keys:", Array.from(tokenStore.keys()));
+  // Initialize Netlify Blobs store (works automatically in Netlify Functions)
+  const store = getStore("tokens");
+
+  console.log("[google-token] Request:", event.httpMethod);
 
   if (event.httpMethod === "OPTIONS") {
     return { statusCode: 200, headers };
@@ -41,7 +40,7 @@ exports.handler = async (event, context) => {
         };
       }
 
-      tokenStore.set(uid, {
+      await store.setJSON(uid, {
         refreshToken,
         updatedAt: new Date().toISOString(),
       });
@@ -65,7 +64,7 @@ exports.handler = async (event, context) => {
         };
       }
 
-      const stored = tokenStore.get(uid);
+      const stored = await store.getJSON(uid, { type: "json" });
       console.log("[google-token] Looking up token for UID:", uid, "Found:", !!stored);
 
       if (!stored) {
