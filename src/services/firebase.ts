@@ -57,7 +57,7 @@ const initCodeClient = () => {
   tokenClient = window.google.accounts.oauth2.initCodeClient({
     client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || "",
     scope:
-      "https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/documents.readonly https://www.googleapis.com/auth/drive.file",
+      "openid email profile https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/documents.readonly https://www.googleapis.com/auth/drive.file",
     ux_mode: "popup",
     select_account: true,
     callback: (response) => {
