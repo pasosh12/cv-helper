@@ -44,14 +44,23 @@ exports.handler = async (event) => {
         };
       }
 
-      await store.set(
-        uid,
-        JSON.stringify({
-          refreshToken,
-          updatedAt: new Date().toISOString(),
-        }),
-      );
-      console.log("[google-token] Stored token for UID:", uid);
+      try {
+        await store.set(
+          uid,
+          JSON.stringify({
+            refreshToken,
+            updatedAt: new Date().toISOString(),
+          }),
+        );
+        console.log("[google-token] Successfully stored token for UID:", uid);
+      } catch (storeError) {
+        console.error("[google-token] Failed to store token:", storeError);
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({ error: "Failed to store token", details: storeError.message }),
+        };
+      }
 
       return {
         statusCode: 200,
