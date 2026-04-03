@@ -15,9 +15,7 @@ import { DocumentInput } from "@/modules/components/DocumentInput";
 import { LinkImport } from "@/modules/components/LinkImport";
 import { BackgroundToggleCheckbox } from "@/modules/components/BackgroundToggleCheckbox";
 import { Title } from "@/ui-kit/Typography";
-// import { GenerateBrightboxFormatDocumentButton } from "@/modules/components/GenerateBrightBoxFormatDocumentButton";
-// import { BackgroundToggleCheckbox } from "@/modules/components/BackgroundToggleCheckbox";
-// import { ConnectDatabaseButton } from "@/modules/components/ConnectDatabaseButton";
+import { Link } from "react-router-dom";
 
 const isEmpty = <T extends object>(obj: T) => Object.keys(obj).length === 0;
 
@@ -71,7 +69,8 @@ export const MainPage = observer(() => {
         <SummarizingField />
       </Block>
       <Footer>
-        <a href="/privacy">Privacy Policy</a> | <a href="/terms">Terms of Service</a>
+        <Link to="/privacy">Privacy Policy</Link> | <Link to="/terms">Terms of Service</Link> |{" "}
+        <Link to="/">Home</Link>
       </Footer>
     </>
   );

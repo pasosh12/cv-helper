@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { StoreProvider } from "./store";
 import { MainPage } from "@/pages/MainPage";
 import { LoginPage } from "@/pages/LoginPage";
+import { LandingPage } from "@/pages/LandingPage";
 import { PrivacyPolicy } from "@/pages/PrivacyPolicy";
 import { TermsOfService } from "@/pages/TermsOfService";
 import { ThemeProvider } from "./theme";
@@ -25,15 +26,13 @@ const AppRoutes = observer(() => {
 
   return (
     <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/login" element={<LoginPage />} />
       <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/terms" element={<TermsOfService />} />
       <Route
-        path="/"
+        path="/app"
         element={auth.isAuthenticated ? <MainPage /> : <Navigate to="/login" replace />}
-      />
-      <Route
-        path="/login"
-        element={!auth.isAuthenticated ? <LoginPage /> : <Navigate to="/" replace />}
       />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

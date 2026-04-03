@@ -150,6 +150,9 @@ export class AuthStore {
         this.user = user;
         this.googleAccessToken = accessToken || null;
       });
+
+      // Redirect to app after successful login
+      window.location.href = "/app";
     } catch (error) {
       runInAction(() => {
         this.error = error instanceof Error ? error.message : "Sign in failed";
@@ -165,6 +168,8 @@ export class AuthStore {
       this.googleAccessToken = null;
       this.firebaseToken = null;
     });
+    // Redirect to landing page after sign out
+    window.location.href = "/";
   };
 
   clearGoogleToken = () => {
