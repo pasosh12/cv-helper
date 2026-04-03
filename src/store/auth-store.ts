@@ -17,6 +17,7 @@ export class AuthStore {
   googleAccessToken: string | null = null;
   firebaseToken: string | null = null;
   isLoading = true;
+  isAuthenticating = false;
   error: string | null = null;
 
   constructor() {
@@ -139,6 +140,7 @@ export class AuthStore {
 
   signInWithGoogle = async () => {
     this.error = null;
+    this.isAuthenticating = true;
     try {
       const { user, accessToken, refreshToken } = await signInWithGoogle();
       // Store refresh token on server if available
@@ -158,6 +160,10 @@ export class AuthStore {
         this.error = error instanceof Error ? error.message : "Sign in failed";
       });
       throw error;
+    } finally {
+      runInAction(() => {
+        this.isAuthenticating = false;
+      });
     }
   };
 

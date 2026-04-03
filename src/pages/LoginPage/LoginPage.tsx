@@ -1,7 +1,8 @@
 import { observer } from "mobx-react-lite";
 import { useStore } from "@/hooks";
-import { Button, Card, Space, Typography, Alert, Spin } from "antd";
+import { Button, Card, Space, Typography, Alert } from "antd";
 import { GoogleOutlined } from "@ant-design/icons";
+import { FullPageLoader } from "@/ui-kit/FullPageLoader";
 
 const { Title, Text } = Typography;
 
@@ -16,18 +17,11 @@ export const LoginPage = observer(() => {
     }
   };
 
-  if (auth.isLoading) {
+  if (auth.isLoading || auth.isAuthenticating) {
     return (
-      <div
-        style={{
-          height: "100vh",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <Spin size="large" />
-      </div>
+      <FullPageLoader
+        message={auth.isAuthenticating ? "Waiting for Google sign-in..." : undefined}
+      />
     );
   }
 
