@@ -11,6 +11,9 @@ exports.handler = async (event, context) => {
     "Access-Control-Allow-Methods": "POST, OPTIONS",
   };
 
+  console.log("[google-token] Request:", event.httpMethod, "Store size:", tokenStore.size);
+  console.log("[google-token] Store keys:", Array.from(tokenStore.keys()));
+
   if (event.httpMethod === "OPTIONS") {
     return { statusCode: 200, headers };
   }
@@ -24,14 +27,11 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    const { action, firebaseToken } = JSON.parse(event.body);
+    const body = JSON.parse(event.body);
+    console.log("[google-token] Action:", body.action, "UID:", body.uid);
 
-    // Verify Firebase token and get UID
-    // In production: verify with firebase-admin
-    // For now, we'll use a simple approach with the client's firebaseToken
-
-    if (action === "store") {
-      const { refreshToken, uid } = JSON.parse(event.body);
+    if (body.action === "store") {
+      const { refreshToken, uid } = body;
 
       if (!refreshToken || !uid) {
         return {
@@ -41,11 +41,11 @@ exports.handler = async (event, context) => {
         };
       }
 
-      // Store in memory (replace with Firestore in production)
       tokenStore.set(uid, {
         refreshToken,
         updatedAt: new Date().toISOString(),
       });
+      console.log("[google-token] Stored token for UID:", uid);
 
       return {
         statusCode: 200,
@@ -54,8 +54,8 @@ exports.handler = async (event, context) => {
       };
     }
 
-    if (action === "getAccessToken") {
-      const { uid } = JSON.parse(event.body);
+    if (body.action === "getAccessToken") {
+      const { uid } = body;
 
       if (!uid) {
         return {
@@ -66,11 +66,13 @@ exports.handler = async (event, context) => {
       }
 
       const stored = tokenStore.get(uid);
+      console.log("[google-token] Looking up token for UID:", uid, "Found:", !!stored);
+
       if (!stored) {
         return {
           statusCode: 404,
           headers,
-          body: JSON.stringify({ error: "No refresh token found" }),
+          body: JSON.stringify({ error: "No refresh token found for user" }),
         };
       }
 
@@ -84,6 +86,7 @@ exports.handler = async (event, context) => {
       });
 
       const { credentials } = await oauth2Client.refreshAccessToken();
+      console.log("[google-token] Access token refreshed successfully");
 
       return {
         statusCode: 200,
@@ -103,11 +106,11 @@ exports.handler = async (event, context) => {
       body: JSON.stringify({ error: "Invalid action" }),
     };
   } catch (error) {
-    console.error("Error:", error);
+    console.error("[google-token] Error:", error);
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: "Internal server error" }),
+      body: JSON.stringify({ error: "Internal server error", details: error.message }),
     };
   }
 };
