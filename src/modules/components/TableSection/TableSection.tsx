@@ -7,8 +7,9 @@ import { Button, Flex, Title } from "@/ui-kit";
 
 export const TableSection = observer(() => {
   const {
-    projects: { table },
+    projects: { table, fileName },
   } = useStore();
+  const isCvImported = Boolean(fileName);
   const tableRef = useRef<HTMLTableElement>(null);
 
   const handleCopy = () => {
@@ -27,7 +28,7 @@ export const TableSection = observer(() => {
     <Flex vertical gap="small" align="stretch" style={{ width: "40%" }}>
       <Flex justify="space-between" align="center">
         <Title level={3}>Professional skills</Title>
-        <Button onClick={handleCopy}>Copy table</Button>
+        {isCvImported && <Button onClick={handleCopy}>Copy table</Button>}
       </Flex>
       <Table technologies={table} ref={tableRef} />
     </Flex>

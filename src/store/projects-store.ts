@@ -16,6 +16,7 @@ const currentMonth = getCurrentMonth();
 
 export class ProjectsStore implements IProjectsStore {
   nextId: number = 1;
+  importResetSignal: number = 0;
   technologiesMap: ITechnologiesMap = {};
   projects: IProject[] = [
     {
@@ -96,6 +97,13 @@ export class ProjectsStore implements IProjectsStore {
       this.nextId = 0;
       this.summary = {};
       this.fileName = "";
+    });
+  };
+
+  clearAll = () => {
+    this.clearStore();
+    runInAction(() => {
+      this.importResetSignal = this.importResetSignal + 1;
     });
   };
 

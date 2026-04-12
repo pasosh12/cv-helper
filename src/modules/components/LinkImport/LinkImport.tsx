@@ -22,7 +22,7 @@ const hashContent = (content: string): string => {
 
 export const LinkImport = observer(() => {
   const {
-    projects: { clearStore, addProject, addSelfInfo, setFileName },
+    projects: { clearStore, addProject, addSelfInfo, setFileName, importResetSignal, fileName },
     auth,
   } = useStore();
 
@@ -30,8 +30,21 @@ export const LinkImport = observer(() => {
   const [loading, setLoading] = useState(false);
   const [autoSync, setAutoSync] = useState(false);
   const [lastSync, setLastSync] = useState<Date | null>(null);
+  const [docId, setDocId] = useState<string | null>(null);
   const lastContentHash = useRef<string | null>(null);
-  const docIdRef = useRef<string | null>(null);
+  const fileNameRef = useRef(fileName);
+
+  useEffect(() => {
+    fileNameRef.current = fileName;
+  }, [fileName]);
+
+  useEffect(() => {
+    setUrl("");
+    setAutoSync(false);
+    setLastSync(null);
+    setDocId(null);
+    lastContentHash.current = null;
+  }, [importResetSignal]);
 
   const extractGoogleDocId = (url: string): string | null => {
     const patterns = [
@@ -153,21 +166,36 @@ export const LinkImport = observer(() => {
       return;
     }
 
-    docIdRef.current = docId;
+    setDocId(docId);
     setAutoSync(false);
 
     setLoading(true);
     try {
-      // Get token automatically (from memory or silent refresh)
+      const importWithToken = async (accessToken: string | null) => {
+        const { arrayBuffer, fileName } = await fetchDocument(docId, accessToken, () => {
+          auth.clearGoogleToken();
+        });
+        const result = await mammoth.convertToHtml({ arrayBuffer });
+
+        await processHtmlContent(result.value);
+        setFileName(fileName || `Google Doc (${docId.slice(0, 8)}...)`);
+      };
+
       const accessToken = await auth.getGoogleAccessToken();
 
-      const { arrayBuffer, fileName } = await fetchDocument(docId, accessToken, () => {
-        auth.clearGoogleToken();
-      });
-      const result = await mammoth.convertToHtml({ arrayBuffer });
+      try {
+        await importWithToken(accessToken);
+      } catch (initialError) {
+        // After tab inactivity the in-memory token can be expired.
+        // Try once more with a refreshed token flow.
+        const refreshedToken = await auth.ensureGoogleAccessToken();
 
-      await processHtmlContent(result.value);
-      setFileName(fileName || `Google Doc (${docId.slice(0, 8)}...)`);
+        if (refreshedToken) {
+          await importWithToken(refreshedToken);
+        } else {
+          throw initialError;
+        }
+      }
     } catch (error) {
       Modal.error({
         title: "Import failed",
@@ -193,23 +221,29 @@ export const LinkImport = observer(() => {
 
   // Auto-sync polling effect
   useEffect(() => {
-    if (!autoSync || !docIdRef.current) {
+    if (!autoSync || !docId) {
       return;
     }
 
-    const docId = docIdRef.current;
-
     const syncDocument = async () => {
       try {
+        const previousFileName = fileNameRef.current;
         // Get token automatically (from memory or silent refresh)
         const accessToken = await auth.getGoogleAccessToken();
 
-        const { arrayBuffer } = await fetchDocument(docId, accessToken, () => {
-          auth.clearGoogleToken();
-        });
+        const { arrayBuffer, fileName: syncedFileName } = await fetchDocument(
+          docId,
+          accessToken,
+          () => {
+            auth.clearGoogleToken();
+          },
+        );
         const result = await mammoth.convertToHtml({ arrayBuffer });
-        await processHtmlContent(result.value, true);
-        setLastSync(new Date());
+        const imported = await processHtmlContent(result.value, true);
+        if (imported) {
+          setFileName(syncedFileName || previousFileName || `Google Doc (${docId.slice(0, 8)}...)`);
+          setLastSync(new Date());
+        }
       } catch (error) {
         // Silent fail on auto-sync errors
       }
@@ -220,7 +254,7 @@ export const LinkImport = observer(() => {
     const intervalId = setInterval(syncDocument, POLLING_INTERVAL);
 
     return () => clearInterval(intervalId);
-  }, [autoSync, auth, processHtmlContent]);
+  }, [autoSync, auth, docId, processHtmlContent, setFileName]);
 
   return (
     <Block gap={10} align="center" wrap="wrap">
@@ -234,7 +268,7 @@ export const LinkImport = observer(() => {
       <Button onClick={handleUrlImport} loading={loading} type="primary">
         Import
       </Button>
-      {docIdRef.current && (
+      {docId && (
         <div>
           <Switch
             checked={autoSync}

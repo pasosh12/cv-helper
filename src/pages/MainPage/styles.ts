@@ -21,7 +21,7 @@ export const ButtonGroup = styled.div`
 
 export const Header = styled(FlexAntd)`
   & {
-    padding: 15px 0 0 50px;
+    padding: 15px 50px 0;
   }
 `;
 

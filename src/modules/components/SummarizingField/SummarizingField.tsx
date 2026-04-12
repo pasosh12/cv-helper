@@ -65,8 +65,9 @@ const tableOfTechnologiesLink = import.meta.env.VITE_TABLE_LINK ?? "";
 
 export const SummarizingField = observer(() => {
   const {
-    projects: { summary, hasCollisions, duplicatedValues, notFoundTechnologies },
+    projects: { summary, hasCollisions, duplicatedValues, notFoundTechnologies, fileName },
   } = useStore();
+  const isCvImported = Boolean(fileName);
 
   const normalizedDuplicatedValues = useMemo(
     () => duplicatedValues.map((item) => normalizeString(item)),
@@ -113,7 +114,7 @@ export const SummarizingField = observer(() => {
 
   return (
     <Flex vertical gap="small" align="stretch" style={{ width: "30%" }}>
-      <Button onClick={handleCopy}>Copy Summary (Please paste using Ctrl+V only)</Button>
+      {isCvImported && <Button onClick={handleCopy}>Copy Summary</Button>}
       {hasCollisions && (
         <Paragraph
           style={{

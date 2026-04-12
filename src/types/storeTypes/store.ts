@@ -44,6 +44,7 @@ export interface SelfInfo {
 
 export interface IProjectsStore {
   nextId: number;
+  importResetSignal: number;
   technologiesMap: ITechnologiesMap;
   table: ITechnologiesTableData;
   name: string;
@@ -58,6 +59,7 @@ export interface IProjectsStore {
   notFoundTechnologies: string[];
   addSelfInfo: (selfInfo: SelfInfo) => void;
   clearStore: () => void;
+  clearAll: () => void;
   addEmptyProject: () => void;
   addProject: (project: IProject) => void;
   setFileName: (name: string) => void;
