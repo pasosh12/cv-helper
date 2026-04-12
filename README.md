@@ -39,21 +39,17 @@ Netlify Environment Variables (for backend functions):
 
 ## Local Development
 
-### Standard Vite dev server (without Netlify Functions)
+### Recommended: one command local run (with Netlify Functions)
 ```bash
 npm install
+npm start
+```
+
+### Alternative: Vite only (without Netlify Functions)
+```bash
 npm run dev
 ```
 Note: OAuth exchange will not work locally with this method.
-
-### With Netlify Functions support
-```bash
-# Install Netlify CLI
-npm install -g netlify-cli
-
-# Run with functions
-npm run dev:netlify
-```
 
 ## Google Cloud Console Setup
 
@@ -105,9 +101,10 @@ netlify/
 
 ## Scripts
 
+- `npm start` - Recommended local start (Netlify dev + functions)
 - `npm run dev` - Vite dev server (no functions)
-- `npm run dev:netlify` - Netlify dev with functions
+- `npm run dev:netlify` - Netlify dev with functions (same mode as `npm start`)
 - `npm run build` - Production build
 - `npm run lint` - ESLint check
+- `npm run lint:fix` - ESLint auto-fix
 - `npm run format` - Prettier formatting
-
