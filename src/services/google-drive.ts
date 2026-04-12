@@ -75,6 +75,11 @@ export async function fetchDocument(
     return { arrayBuffer, fileName: metadata?.name ?? null };
   }
 
+  if (exportResponse.status === 401) {
+    onAuthError?.();
+    throw new Error("Google session expired (401). Please sign in again.");
+  }
+
   if (exportResponse.status === 403) {
     const errorText = await exportResponse.text();
 
@@ -94,6 +99,10 @@ export async function fetchDocument(
         // Fallback to Content-Disposition if metadata didn't work
         const fallbackName = fileName ?? extractFileNameFromHeaders(downloadResponse);
         return { arrayBuffer, fileName: fallbackName };
+      }
+
+      if (downloadResponse.status === 401 || downloadResponse.status === 403) {
+        onAuthError?.();
       }
 
       throw new Error(`Download failed with status ${downloadResponse.status}`);
