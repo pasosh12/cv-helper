@@ -1,17 +1,9 @@
 const { google } = require("googleapis");
-const { getStore } = require("@netlify/blobs");
+const { connectLambda, getStore } = require("@netlify/blobs");
 
-// Initialize Netlify Blobs store
+// Initialize Netlify Blobs store using the context Netlify injects at runtime
 const getTokenStore = () => {
-  if (!process.env.NETLIFY_SITE_ID || !process.env.NETLIFY_BLOBS_TOKEN) {
-    throw new Error("Missing NETLIFY_SITE_ID or NETLIFY_BLOBS_TOKEN environment variables");
-  }
-
-  const store = getStore({
-    name: "tokens",
-    siteID: process.env.NETLIFY_SITE_ID,
-    token: process.env.NETLIFY_BLOBS_TOKEN,
-  });
+  const store = getStore("tokens");
 
   return {
     async set(key, value) {
@@ -32,6 +24,7 @@ exports.handler = async (event) => {
 
   let store;
   try {
+    connectLambda(event);
     store = getTokenStore();
   } catch (error) {
     console.error("[google-token] Store initialization error:", error.message);
