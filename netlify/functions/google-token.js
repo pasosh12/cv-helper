@@ -1,5 +1,5 @@
 const { google } = require("googleapis");
-const { getStore } = require("@netlify/blobs");
+const { connectLambda, getStore } = require("@netlify/blobs");
 
 // Initialize Netlify Blobs store using the context Netlify injects at runtime
 const getTokenStore = () => {
@@ -24,6 +24,7 @@ exports.handler = async (event) => {
 
   let store;
   try {
+    connectLambda(event);
     store = getTokenStore();
   } catch (error) {
     console.error("[google-token] Store initialization error:", error.message);
