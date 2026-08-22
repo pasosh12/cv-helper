@@ -34,11 +34,13 @@ export const TableSection = observer(() => {
   };
 
   return (
-    <Flex vertical gap="small" align="stretch" style={{ width: "40%" }}>
-      <Flex justify="space-between" align="center">
-        <Title level={3}>Professional skills</Title>
+    <Flex vertical gap="small" align="stretch" style={{ flex: "1 1 340px", minWidth: 0 }}>
+      <Flex justify="space-between" align="center" gap="small" wrap="wrap">
+        <Title level={3} style={{ margin: 0 }}>
+          Professional skills
+        </Title>
         {isCvImported && (
-          <Flex gap="small" align="center">
+          <Flex gap="small" align="center" wrap="wrap">
             <Segmented
               value={grouping}
               onChange={(value) => setGrouping(value as TableGrouping)}

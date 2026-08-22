@@ -113,7 +113,7 @@ export const SummarizingField = observer(() => {
   };
 
   return (
-    <Flex vertical gap="small" align="stretch" style={{ width: "30%" }}>
+    <Flex vertical gap="small" align="stretch" style={{ flex: "1 1 280px", minWidth: 0 }}>
       {isCvImported && <Button onClick={handleCopy}>Copy Summary</Button>}
       {hasCollisions && (
         <Paragraph

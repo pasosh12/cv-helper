@@ -11,7 +11,7 @@ A web application for managing CV documents with Google Drive integration. Built
 
 ## Prerequisites
 
-- Node.js 18+
+- Node.js 20+
 - Google Cloud account with OAuth 2.0 credentials
 - Firebase project
 - Netlify account (for deployment)
@@ -59,7 +59,7 @@ Note: OAuth exchange will not work locally with this method.
 
 1. Create OAuth 2.0 credentials (Web application type)
 2. Add Authorized JavaScript origins:
-   - `http://localhost:5173` (for local dev)
+   - `http://localhost:8888` (local dev via `npm start` - see [Local Development](#local-development))
    - `https://your-site.netlify.app` (production)
 3. Leave Authorized redirect URIs empty (for popup flow)
 4. Configure OAuth consent screen:
@@ -105,10 +105,10 @@ netlify/
 
 ## Scripts
 
-- `npm start` - Recommended local start (Netlify dev + functions)
-- `npm run dev` - Vite dev server (no functions)
-- `npm run dev:netlify` - Netlify dev with functions (same mode as `npm start`)
+See [Local Development](#local-development) for `npm start` / `npm run dev`.
+
 - `npm run build` - Production build
+- `npm run preview` - Preview the production build locally
 - `npm run lint` - ESLint check
 - `npm run lint:fix` - ESLint auto-fix
 - `npm run format` - Prettier formatting

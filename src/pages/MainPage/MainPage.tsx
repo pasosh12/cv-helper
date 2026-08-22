@@ -39,7 +39,18 @@ export const MainPage = observer(() => {
       <ChangelogModal />
       <Header justify="space-between" align="center">
         {fileName ? (
-          <Title level={5} style={{ margin: "0", whiteSpace: "pre" }}>
+          <Title
+            level={5}
+            style={{
+              margin: 0,
+              flex: "1 1 auto",
+              minWidth: 0,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+            title={`Source: ${fileName}`}
+          >
             Source: {fileName}
           </Title>
         ) : (
@@ -51,7 +62,7 @@ export const MainPage = observer(() => {
       </Header>
       <LinkImport />
 
-      <Controls gap={10}>
+      <Controls>
         <ButtonGroup>
           <ReloadPageButton />
           <DocumentInput />
@@ -65,7 +76,7 @@ export const MainPage = observer(() => {
           <BackgroundToggleCheckbox />
         </ButtonGroup>
       </Controls>
-      <Block gap={100} justify="start">
+      <Block justify="start">
         <ListProjects />
         <TableSection />
         <SummarizingField />
