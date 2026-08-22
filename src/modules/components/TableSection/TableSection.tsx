@@ -1,9 +1,12 @@
 import { observer } from "mobx-react-lite";
-import { useRef } from "react";
-import { message } from "antd";
+import { useMemo, useRef, useState } from "react";
+import { message, Segmented } from "antd";
 import { Table } from "@/components/Table";
 import { useStore } from "@/hooks";
 import { Button, Flex, Title } from "@/ui-kit";
+import { getBroadTable } from "@/store/helpers";
+
+type TableGrouping = "default" | "hays";
 
 export const TableSection = observer(() => {
   const {
@@ -11,6 +14,12 @@ export const TableSection = observer(() => {
   } = useStore();
   const isCvImported = Boolean(fileName);
   const tableRef = useRef<HTMLTableElement>(null);
+  const [grouping, setGrouping] = useState<TableGrouping>("default");
+
+  const displayedTable = useMemo(
+    () => (grouping === "hays" ? getBroadTable(table) : table),
+    [grouping, table],
+  );
 
   const handleCopy = () => {
     if (tableRef.current) {
@@ -28,9 +37,21 @@ export const TableSection = observer(() => {
     <Flex vertical gap="small" align="stretch" style={{ width: "40%" }}>
       <Flex justify="space-between" align="center">
         <Title level={3}>Professional skills</Title>
-        {isCvImported && <Button onClick={handleCopy}>Copy table</Button>}
+        {isCvImported && (
+          <Flex gap="small" align="center">
+            <Segmented
+              value={grouping}
+              onChange={(value) => setGrouping(value as TableGrouping)}
+              options={[
+                { label: "Default", value: "default" },
+                { label: "Hays", value: "hays" },
+              ]}
+            />
+            <Button onClick={handleCopy}>Copy table</Button>
+          </Flex>
+        )}
       </Flex>
-      <Table technologies={table} ref={tableRef} />
+      <Table technologies={displayedTable} ref={tableRef} />
     </Flex>
   );
 });
