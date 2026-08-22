@@ -42,8 +42,12 @@ Netlify Environment Variables (for backend functions):
 ### Recommended: one command local run (with Netlify Functions)
 ```bash
 npm install
+npx netlify link   # one-time: link this folder to the deployed Netlify site
 npm start
 ```
+`npm start` runs Vite and Netlify Functions together (same as production), including
+Netlify Blobs used by `google-token.js`. Blobs only gets real local credentials once
+the project is linked — `npm start` checks for this and tells you if it's missing.
 
 ### Alternative: Vite only (without Netlify Functions)
 ```bash

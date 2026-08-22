@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:netlify": "npx netlify dev",
+    "predev:netlify": "node scripts/check-netlify-link.mjs",
+    "dev:netlify": "netlify dev",
     "start": "npm run dev:netlify",
     "build": "tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
@@ -53,6 +54,7 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",
     "husky": "^8.0.0",
+    "netlify-cli": "^24.9.0",
     "prettier": "^3.2.5",
     "typescript": "^5.2.2",
     "vite": "^5.1.4"
