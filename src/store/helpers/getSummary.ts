@@ -1,6 +1,7 @@
 import { SectionsNames } from "@/enums/sectionsNames";
 import { normalizeString } from "@/modules/utils/normalizeString";
 import { IProject, ITechnologiesMap } from "@/types/storeTypes";
+import { broadSectionsOrder } from "../constants/sectionsOrder";
 
 type Map = Partial<Record<SectionsNames, string[]>>;
 
@@ -70,18 +71,10 @@ const mergeTechnologies = (technologies: string[]) => {
 };
 
 export const getSummary = (projects: IProject[], technologiesMap: ITechnologiesMap) => {
-  const summary: Map = {
-    [SectionsNames.ProgrammingLanguages]: [],
-    [SectionsNames.Frontend]: [],
-    [SectionsNames.BackendTechnologies]: [],
-    [SectionsNames.JavaFrameworks]: [],
-    [SectionsNames.Containerization]: [],
-    [SectionsNames.CiCd]: [],
-    [SectionsNames.Cloud]: [],
-    [SectionsNames.Databases]: [],
-    [SectionsNames.VersionControlSystems]: [],
-    [SectionsNames.AITools]: [],
-  };
+  const summary: Map = {};
+  broadSectionsOrder.forEach((section) => {
+    summary[section] = [];
+  });
   const technologies = projects.flatMap(({ technologies }) => technologies ?? []);
   const mergedTechnologies = mergeTechnologies(technologies);
   const uniqueTechnologies = Array.from(new Set<string>(mergedTechnologies));
