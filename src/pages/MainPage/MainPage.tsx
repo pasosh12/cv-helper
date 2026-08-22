@@ -14,6 +14,7 @@ import { RefetchDataButton } from "@/modules/components/RefetchDataButton";
 import { DocumentInput } from "@/modules/components/DocumentInput";
 import { LinkImport } from "@/modules/components/LinkImport";
 import { BackgroundToggleCheckbox } from "@/modules/components/BackgroundToggleCheckbox";
+import { ChangelogModal } from "@/modules/components/ChangelogModal";
 import { Title } from "@/ui-kit/Typography";
 import { Link } from "react-router-dom";
 
@@ -35,6 +36,7 @@ export const MainPage = observer(() => {
 
   return (
     <>
+      <ChangelogModal />
       <Header justify="space-between" align="center">
         {fileName ? (
           <Title level={5} style={{ margin: "0", whiteSpace: "pre" }}>
