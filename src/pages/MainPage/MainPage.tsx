@@ -204,7 +204,7 @@ export const MainPage = observer(() => {
               {candidateAge !== undefined && (
                 <span style={{ color: "#8c8c8c", fontWeight: 400, fontSize: "13px" }}>
                   {" "}
-                  ({candidateAge} y.o. Recommended {candidateAge} - 18 years)
+                  ({candidateAge} y.o. Recommended {candidateAge - 18} years)
                 </span>
               )}
             </Title>
