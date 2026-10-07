@@ -37,6 +37,8 @@ export class ProjectsStore implements IProjectsStore {
   notFoundTechnologies: string[] = [];
   tableLink: string = "";
   fileName: string = "";
+  sourceDocId: string | null = null;
+  isNativeGoogleDoc: boolean = false;
   name = "";
   roles = "";
   education: string = "";
@@ -97,6 +99,8 @@ export class ProjectsStore implements IProjectsStore {
       this.nextId = 0;
       this.summary = {};
       this.fileName = "";
+      this.sourceDocId = null;
+      this.isNativeGoogleDoc = false;
     });
   };
 
@@ -110,6 +114,19 @@ export class ProjectsStore implements IProjectsStore {
   setFileName = (name: string) => {
     runInAction(() => {
       this.fileName = name;
+    });
+  };
+
+  setName = (name: string) => {
+    runInAction(() => {
+      this.name = name;
+    });
+  };
+
+  setSourceDoc = (docId: string | null, isNativeGoogleDoc: boolean) => {
+    runInAction(() => {
+      this.sourceDocId = docId;
+      this.isNativeGoogleDoc = isNativeGoogleDoc;
     });
   };
 

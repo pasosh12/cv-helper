@@ -22,7 +22,15 @@ const hashContent = (content: string): string => {
 
 export const LinkImport = observer(() => {
   const {
-    projects: { clearStore, addProject, addSelfInfo, setFileName, importResetSignal, fileName },
+    projects: {
+      clearStore,
+      addProject,
+      addSelfInfo,
+      setFileName,
+      setSourceDoc,
+      importResetSignal,
+      fileName,
+    },
     auth,
   } = useStore();
 
@@ -172,13 +180,18 @@ export const LinkImport = observer(() => {
     setLoading(true);
     try {
       const importWithToken = async (accessToken: string | null) => {
-        const { arrayBuffer, fileName } = await fetchDocument(docId, accessToken, () => {
-          auth.clearGoogleToken();
-        });
+        const { arrayBuffer, fileName, isNativeGoogleDoc } = await fetchDocument(
+          docId,
+          accessToken,
+          () => {
+            auth.clearGoogleToken();
+          },
+        );
         const result = await mammoth.convertToHtml({ arrayBuffer });
 
         await processHtmlContent(result.value);
         setFileName(fileName || `Google Doc (${docId.slice(0, 8)}...)`);
+        setSourceDoc(docId, isNativeGoogleDoc);
       };
 
       const accessToken = await auth.getGoogleAccessToken();
@@ -231,17 +244,18 @@ export const LinkImport = observer(() => {
         // Get token automatically (from memory or silent refresh)
         const accessToken = await auth.getGoogleAccessToken();
 
-        const { arrayBuffer, fileName: syncedFileName } = await fetchDocument(
-          docId,
-          accessToken,
-          () => {
-            auth.clearGoogleToken();
-          },
-        );
+        const {
+          arrayBuffer,
+          fileName: syncedFileName,
+          isNativeGoogleDoc,
+        } = await fetchDocument(docId, accessToken, () => {
+          auth.clearGoogleToken();
+        });
         const result = await mammoth.convertToHtml({ arrayBuffer });
         const imported = await processHtmlContent(result.value, true);
         if (imported) {
           setFileName(syncedFileName || previousFileName || `Google Doc (${docId.slice(0, 8)}...)`);
+          setSourceDoc(docId, isNativeGoogleDoc);
           setLastSync(new Date());
         }
       } catch (error) {
@@ -254,7 +268,7 @@ export const LinkImport = observer(() => {
     const intervalId = setInterval(syncDocument, POLLING_INTERVAL);
 
     return () => clearInterval(intervalId);
-  }, [autoSync, auth, docId, processHtmlContent, setFileName]);
+  }, [autoSync, auth, docId, processHtmlContent, setFileName, setSourceDoc]);
 
   return (
     <Block gap={10} align="center" wrap="wrap">

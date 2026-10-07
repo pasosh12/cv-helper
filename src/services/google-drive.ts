@@ -3,6 +3,8 @@ const DRIVE_API_BASE = "https://www.googleapis.com/drive/v3/files";
 export interface DocumentResult {
   arrayBuffer: ArrayBuffer;
   fileName: string | null;
+  /** True for a native Google Doc (editable via the Docs API), false for a binary file (e.g. an uploaded .docx) stored in Drive. */
+  isNativeGoogleDoc: boolean;
 }
 
 export async function getFileMetadata(
@@ -35,6 +37,36 @@ export async function exportGoogleDoc(docId: string, accessToken: string): Promi
       },
     },
   );
+}
+
+/**
+ * "forbidden" means the token is valid but lacks write access to this
+ * specific file - typically because it still carries scopes from before a
+ * Drive/Docs scope upgrade, and a fresh consent (not just a silent token
+ * refresh) is needed to pick up the new ones.
+ */
+export type DriveWriteResult = "ok" | "forbidden" | "error";
+
+/** Renames a file in Google Drive (works for both native Google Docs and binary files). */
+export async function renameDriveFile(
+  docId: string,
+  accessToken: string,
+  newName: string,
+): Promise<DriveWriteResult> {
+  try {
+    const response = await fetch(`${DRIVE_API_BASE}/${docId}?supportsAllDrives=true`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ name: newName }),
+    });
+    if (response.ok) return "ok";
+    return response.status === 403 ? "forbidden" : "error";
+  } catch {
+    return "error";
+  }
 }
 
 export async function downloadFile(docId: string, accessToken: string): Promise<Response> {
@@ -72,7 +104,7 @@ export async function fetchDocument(
   if (exportResponse.ok) {
     const arrayBuffer = await exportResponse.arrayBuffer();
     const metadata = await getFileMetadata(docId, accessToken);
-    return { arrayBuffer, fileName: metadata?.name ?? null };
+    return { arrayBuffer, fileName: metadata?.name ?? null, isNativeGoogleDoc: true };
   }
 
   if (exportResponse.status === 401) {
@@ -98,7 +130,7 @@ export async function fetchDocument(
         const arrayBuffer = await downloadResponse.arrayBuffer();
         // Fallback to Content-Disposition if metadata didn't work
         const fallbackName = fileName ?? extractFileNameFromHeaders(downloadResponse);
-        return { arrayBuffer, fileName: fallbackName };
+        return { arrayBuffer, fileName: fallbackName, isNativeGoogleDoc: false };
       }
 
       if (downloadResponse.status === 401 || downloadResponse.status === 403) {

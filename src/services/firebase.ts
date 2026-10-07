@@ -56,8 +56,10 @@ const initCodeClient = () => {
 
   tokenClient = window.google.accounts.oauth2.initCodeClient({
     client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || "",
+    // Full (not just .readonly) Drive + Docs scopes - needed so "Apply recommended" can
+    // rename the source file and edit its name text directly in Google Drive/Docs.
     scope:
-      "openid email profile https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/documents.readonly https://www.googleapis.com/auth/drive.file",
+      "openid email profile https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/documents",
     ux_mode: "popup",
     select_account: true,
     callback: (response) => {
