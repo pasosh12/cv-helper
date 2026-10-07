@@ -1,0 +1,1 @@
+export { BirthdaysModal } from "./BirthdaysModal";
