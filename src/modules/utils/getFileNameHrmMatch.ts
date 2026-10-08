@@ -10,20 +10,25 @@ export interface FileNameHrmMatch {
   recommendedFileName?: string;
 }
 
+export interface ClosestFileNameEmployee {
+  employee: Employee;
+  /** Summed Levenshtein distance of both tokens to the employee's names. */
+  distance: number;
+  /** The tokens were closest when read as "Surname Name". */
+  isCorrectOrder: boolean;
+  /** Whether the match is close enough to trust as the same person. */
+  isCloseEnough: boolean;
+}
+
 /**
- * Checks whether an uploaded file's name follows the "Surname Name" order
- * used by the HRM export (the source of truth), unlike the CV's own
- * self-intro line, which always starts with the first name.
- *
- * Matching is distance-based rather than exact, so a typo in either the
- * surname or the name (or both, e.g. "Mikhevich Nikita" for the real
- * "Mihnevich Nikita") still surfaces the closest real employee instead of
- * silently giving up.
+ * Finds the HRM employee whose name is closest to the first two name-like
+ * tokens of a file name, reading them in either order. Returns null when the
+ * file name doesn't have two such tokens.
  */
-export const getFileNameHrmMatch = (
+export const findClosestEmployeeByFileName = (
   fileName: string,
   employeesList: Employee[],
-): FileNameHrmMatch | null => {
+): ClosestFileNameEmployee | null => {
   const baseName = fileName.replace(/\.[^.]+$/, "");
   const tokens = baseName.split(/[^a-zA-Zа-яА-ЯёЁ]+/).filter(Boolean);
 
@@ -68,28 +73,51 @@ export const getFileNameHrmMatch = (
   });
 
   if (!closestEmployee) {
-    return { isMatch: false };
-  }
-
-  if (closestDistance === 0) {
-    return closestIsCorrectOrder
-      ? { isMatch: true }
-      : {
-          isMatch: false,
-          recommendedFileName: `${closestEmployee.lastName} ${closestEmployee.firstName}`,
-        };
+    return null;
   }
 
   const closestNameLength =
     normalizeString(closestEmployee.firstName).length +
     normalizeString(closestEmployee.lastName).length;
   const maxLength = Math.max(tokensLength, closestNameLength);
-  const isCloseEnoughToSuggest = closestDistance / maxLength <= MAX_SUGGESTION_DISTANCE_RATIO;
+
+  return {
+    employee: closestEmployee,
+    distance: closestDistance,
+    isCorrectOrder: closestIsCorrectOrder,
+    isCloseEnough: closestDistance / maxLength <= MAX_SUGGESTION_DISTANCE_RATIO,
+  };
+};
+
+/**
+ * Checks whether an uploaded file's name follows the "Surname Name" order
+ * used by the HRM export (the source of truth), unlike the CV's own
+ * self-intro line, which always starts with the first name.
+ *
+ * Matching is distance-based rather than exact, so a typo in either the
+ * surname or the name (or both, e.g. "Mikhevich Nikita" for the real
+ * "Mihnevich Nikita") still surfaces the closest real employee instead of
+ * silently giving up.
+ */
+export const getFileNameHrmMatch = (
+  fileName: string,
+  employeesList: Employee[],
+): FileNameHrmMatch | null => {
+  const closest = findClosestEmployeeByFileName(fileName, employeesList);
+
+  if (!closest) {
+    return null;
+  }
+
+  const { employee, distance, isCorrectOrder, isCloseEnough } = closest;
+  const recommendedFileName = `${employee.lastName} ${employee.firstName}`;
+
+  if (distance === 0) {
+    return isCorrectOrder ? { isMatch: true } : { isMatch: false, recommendedFileName };
+  }
 
   return {
     isMatch: false,
-    recommendedFileName: isCloseEnoughToSuggest
-      ? `${closestEmployee.lastName} ${closestEmployee.firstName}`
-      : undefined,
+    recommendedFileName: isCloseEnough ? recommendedFileName : undefined,
   };
 };

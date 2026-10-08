@@ -24,6 +24,7 @@ import { employees } from "@/modules/constants";
 import { getHrmNameMatch } from "@/modules/utils/getHrmNameMatch";
 import { getFileNameHrmMatch } from "@/modules/utils/getFileNameHrmMatch";
 import { resolveEmployeeFromCvName } from "@/modules/utils/resolveEmployeeFromCvName";
+import { resolveEmployeeFromFileName } from "@/modules/utils/resolveEmployeeFromFileName";
 import { getMaxExperienceYears } from "@/modules/utils/getMaxExperienceYears";
 import { formatAbbreviatedName } from "@/modules/utils/formatAbbreviatedName";
 import { renameDriveFile } from "@/services/google-drive";
@@ -50,7 +51,14 @@ export const MainPage = observer(() => {
 
   const hrmNameMatch = useMemo(() => getHrmNameMatch(name, employees), [name]);
   const fileNameHrmMatch = useMemo(() => getFileNameHrmMatch(fileName, employees), [fileName]);
-  const resolvedCandidate = useMemo(() => resolveEmployeeFromCvName(name, employees), [name]);
+  // The file name ("Surname Name", both in full) identifies the person more
+  // reliably than the CV's "Name S." line, so the CV name is only a fallback.
+  const resolvedCandidate = useMemo(
+    () =>
+      resolveEmployeeFromFileName(fileName, employees) ??
+      resolveEmployeeFromCvName(name, employees),
+    [fileName, name],
+  );
   const candidateAge = resolvedCandidate?.dateOfBirth
     ? dayjs().diff(dayjs(resolvedCandidate.dateOfBirth), "year")
     : undefined;
