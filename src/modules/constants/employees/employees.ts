@@ -11,6 +11,7 @@ export interface Employee {
 
 export const employees: Employee[] = [
   { id: 3679, firstName: "Abdulkhakim", lastName: "Abdukhalimov", dateOfBirth: "1998-12-22" },
+  { id: 2335, firstName: "Yahor", lastName: "Shynkarevich", dateOfBirth: "2002-07-09" },
   { id: 3016, firstName: "Admin", lastName: "InnoStaff", dateOfBirth: null },
   { id: 1566, firstName: "Adryian", lastName: "Senkevich", dateOfBirth: "2001-10-29" },
   { id: 1497, firstName: "Alesia", lastName: "Voronovich", dateOfBirth: "2001-08-25" },
