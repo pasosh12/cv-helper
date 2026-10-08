@@ -10,3 +10,13 @@
 
 [build.environment]
   NODE_VERSION = "20"
+
+# Local `npm run dev` (netlify dev). The port is pinned so the app always runs on
+# http://localhost:8888 - the origin registered in the Google OAuth client.
+# Any other port/host fails Google sign-in with "Error 400: origin_mismatch".
+[dev]
+  framework = "#custom"
+  command = "vite --port 5173 --strictPort"
+  targetPort = 5173
+  port = 8888
+  autoLaunch = false

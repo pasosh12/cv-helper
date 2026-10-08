@@ -39,27 +39,28 @@ Netlify Environment Variables (for backend functions):
 
 ## Local Development
 
-### Recommended: one command local run (with Netlify Functions)
 ```bash
 npm install
 npx netlify link   # one-time: link this folder to the deployed Netlify site
-npm start
-```
-`npm start` runs Vite and Netlify Functions together (same as production), including
-Netlify Blobs used by `google-token.js`. Blobs only gets real local credentials once
-the project is linked — `npm start` checks for this and tells you if it's missing.
-
-### Alternative: Vite only (without Netlify Functions)
-```bash
 npm run dev
 ```
-Note: OAuth exchange will not work locally with this method.
+`npm run dev` is the only local command. It runs Vite and Netlify Functions together
+(same as production), including Netlify Blobs used by `google-token.js`. Blobs only
+gets real local credentials once the project is linked — `npm run dev` checks for
+this and tells you if it's missing.
+
+The app always runs on **http://localhost:8888**. The port is pinned in `[dev]` of
+`netlify.toml` because it's the only local origin registered in the Google OAuth
+client; any other port fails sign-in with `Error 400: origin_mismatch`. Vite also
+prints `localhost:5173`. That's the internal port behind the proxy, so don't open
+it. If 8888 or 5173 is already taken, `npm run dev` stops with a message instead of
+quietly moving to another port.
 
 ## Google Cloud Console Setup
 
 1. Create OAuth 2.0 credentials (Web application type)
 2. Add Authorized JavaScript origins:
-   - `http://localhost:8888` (local dev via `npm start` - see [Local Development](#local-development))
+   - `http://localhost:8888` (local dev via `npm run dev` - see [Local Development](#local-development))
    - `https://your-site.netlify.app` (production)
 3. Leave Authorized redirect URIs empty (for popup flow)
 4. Configure OAuth consent screen:
@@ -94,7 +95,7 @@ netlify/
 ## Troubleshooting
 
 **"Failed to exchange code for tokens" locally**
-- OAuth exchange requires Netlify Functions. Use `npm run dev:netlify` or test on deployed site.
+- OAuth exchange requires Netlify Functions. Run locally with `npm run dev` (open `http://localhost:8888`) or test on the deployed site.
 
 **"Google hasn't verified this app" warning**
 - Expected for testing. Click "Advanced" → "Go to unsafe".
@@ -105,7 +106,7 @@ netlify/
 
 ## Scripts
 
-See [Local Development](#local-development) for `npm start` / `npm run dev`.
+See [Local Development](#local-development) for `npm run dev`.
 
 - `npm run build` - Production build
 - `npm run preview` - Preview the production build locally

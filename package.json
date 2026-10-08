@@ -4,10 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "predev:netlify": "node scripts/check-netlify-link.mjs",
-    "dev:netlify": "node scripts/dev-with-restart.mjs",
-    "start": "npm run dev:netlify",
+    "dev": "node scripts/dev.mjs",
     "build": "tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "eslint . --ext ts,tsx --fix",
