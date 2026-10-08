@@ -1,10 +1,11 @@
 import { observer } from "mobx-react-lite";
 import { useStore } from "@/hooks";
-import { Flex, Typography, message } from "antd";
+import { Flex, Typography, message, Modal } from "antd";
 import { normalizeString } from "@/modules/utils/normalizeString";
-import { FC, useCallback, useMemo, useRef } from "react";
+import { FC, useCallback, useMemo, useRef, useState } from "react";
 import { ISummaryField } from "@/types/storeTypes";
 import { Button } from "@/ui-kit/Button";
+import { SummarySectionOutcome, updateSummaryInGoogleDoc } from "@/services/google-docs";
 
 const { Title, Paragraph } = Typography;
 
@@ -61,13 +62,29 @@ const SummaryContent: FC<SummaryContentProps> = ({ summary, getDuplicatedColor }
 
 const DUPLICATE_COLORS = ["#FFC1C1", "#C1FFC1", "#C1C1FF", "#FFFFC1", "#FFC1FF", "#C1FFFF"];
 
+const SUMMARY_OUTCOME_LABELS: Record<SummarySectionOutcome["outcome"], string> = {
+  updated: "updated",
+  inserted: "added",
+  removed: "removed",
+};
+
 const tableOfTechnologiesLink = import.meta.env.VITE_TABLE_LINK ?? "";
 
 export const SummarizingField = observer(() => {
   const {
-    projects: { summary, hasCollisions, duplicatedValues, notFoundTechnologies, fileName },
+    projects: {
+      summary,
+      hasCollisions,
+      duplicatedValues,
+      notFoundTechnologies,
+      fileName,
+      sourceDocId,
+      isNativeGoogleDoc,
+    },
+    auth,
   } = useStore();
   const isCvImported = Boolean(fileName);
+  const [isUpdatingSummary, setIsUpdatingSummary] = useState(false);
 
   const normalizedDuplicatedValues = useMemo(
     () => duplicatedValues.map((item) => normalizeString(item)),
@@ -112,9 +129,75 @@ export const SummarizingField = observer(() => {
     }
   };
 
+  const handleUpdateSummary = async () => {
+    if (!sourceDocId) return;
+
+    setIsUpdatingSummary(true);
+    try {
+      const accessToken = await auth.ensureGoogleAccessToken();
+      if (!accessToken) {
+        message.error("Google sign-in is required to update the summary in Drive.");
+        return;
+      }
+
+      const { result, rewritten, sections } = await updateSummaryInGoogleDoc(
+        sourceDocId,
+        accessToken,
+        summary,
+      );
+
+      if (result === "ok") {
+        if (!rewritten) {
+          message.info("Summary is already up to date - nothing to change.");
+          return;
+        }
+        if (sections.length === 0) {
+          message.success("Summary formatting updated in the CV.");
+          return;
+        }
+
+        message.success("Summary updated in the CV.");
+        // Only the sections that actually changed, were added or removed -
+        // makes it obvious what this click did to the doc.
+        Modal.info({
+          title: "Update Summary - details",
+          width: 480,
+          content: (
+            <ul style={{ paddingLeft: 20 }}>
+              {sections.map(({ sectionName, outcome }) => (
+                <li key={sectionName}>
+                  {sectionName}: <b>{SUMMARY_OUTCOME_LABELS[outcome]}</b>
+                </li>
+              ))}
+            </ul>
+          ),
+        });
+      } else if (result === "not-found") {
+        message.error("Couldn't find any matching summary sections in this document to update.");
+      } else if (result === "forbidden") {
+        message.error(
+          "Couldn't update the summary: missing Docs write permission. Sign out and sign back in to refresh your Google Drive permissions.",
+        );
+      } else {
+        message.error("Failed to update the summary in the CV.");
+      }
+    } finally {
+      setIsUpdatingSummary(false);
+    }
+  };
+
   return (
     <Flex vertical gap="small" align="stretch" style={{ flex: "1 1 280px", minWidth: 0 }}>
-      {isCvImported && <Button onClick={handleCopy}>Copy Summary</Button>}
+      {isCvImported && (
+        <Flex gap="small" wrap="wrap">
+          <Button onClick={handleCopy}>Copy Summary</Button>
+          {sourceDocId && isNativeGoogleDoc && (
+            <Button onClick={handleUpdateSummary} loading={isUpdatingSummary}>
+              Update Summary
+            </Button>
+          )}
+        </Flex>
+      )}
       {hasCollisions && (
         <Paragraph
           style={{
