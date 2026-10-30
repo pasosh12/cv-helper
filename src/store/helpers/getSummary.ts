@@ -2,6 +2,7 @@ import { SectionsNames } from "@/enums/sectionsNames";
 import { normalizeString } from "@/modules/utils/normalizeString";
 import { IProject, ITechnologiesMap } from "@/types/storeTypes";
 import { broadSectionsOrder } from "../constants/sectionsOrder";
+import { getBroadSection } from "./getBroadSection";
 
 type Map = Partial<Record<SectionsNames, string[]>>;
 
@@ -100,13 +101,8 @@ export const getSummary = (projects: IProject[], technologiesMap: ITechnologiesM
     .forEach(({ original, map }) => {
       if (!map) return;
 
-      const section = map.name as SectionsNames;
-
-      if (summary[section]) {
-        summary[section]!.push(original);
-      } else {
-        summary[SectionsNames.Frontend]!.push(original);
-      }
+      const broadSection = getBroadSection(map.name, original);
+      if (broadSection) summary[broadSection]!.push(original);
     });
 
   // Delete empty summary sections

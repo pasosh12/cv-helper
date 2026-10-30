@@ -578,7 +578,7 @@ export interface SummaryUpdateOutcome {
  * through "AI tools" section list - to match the one currently shown in the
  * app. Everything from the first summary heading to the last non-empty line
  * of its table cell (or up to "Projects", outside a table) is replaced, so
- * categories an older CV has but the app no longer does (e.g. "DevOps") go
+ * categories an older CV has but the app no longer does (e.g. "Containerization") go
  * away instead of lingering next to the new ones.
  *
  * Headings copy the existing summary heading's formatting; lists copy an

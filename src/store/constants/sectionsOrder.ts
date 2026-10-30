@@ -41,16 +41,15 @@ export const sectionsOrder = [
   SectionsNames.NotFound,
 ];
 
-// Broad categories used for the "Hays" grouping mode - same buckets as the summary field
+// Broad categories used for the summary field and the "Hays" grouping mode
 export const broadSectionsOrder = [
   SectionsNames.ProgrammingLanguages,
   SectionsNames.Frontend,
   SectionsNames.BackendTechnologies,
-  SectionsNames.JavaFrameworks,
-  SectionsNames.Containerization,
-  SectionsNames.CiCd,
-  SectionsNames.Cloud,
+  SectionsNames.MessageBrokers,
   SectionsNames.Databases,
+  SectionsNames.Clouds,
+  SectionsNames.DevOps,
   SectionsNames.VersionControlSystems,
   SectionsNames.AITools,
 ];

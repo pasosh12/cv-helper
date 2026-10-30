@@ -37,5 +37,9 @@ export enum SectionsNames {
   GraphicEditors = "Graphic editors",
   VersionControlSystems = "Version control systems",
   AITools = "AI tools",
+  // Summary-only groups - not columns of the technologies sheet, see getBroadSection
+  MessageBrokers = "Message Brokers",
+  Clouds = "Clouds",
+  DevOps = "DevOps",
   NotFound = "Not found",
 }
