@@ -5,9 +5,18 @@ export type ChangelogEntry = {
 
 // Newest entry first. Bump CHANGELOG_VERSION whenever a new entry is added
 // so the "What's new" modal shows again for everyone.
-export const CHANGELOG_VERSION = "2026-10-08";
+export const CHANGELOG_VERSION = "2026-10-30";
 
 export const changelog: ChangelogEntry[] = [
+  {
+    date: "2026-10-30",
+    items: [
+      "The summary and the Hays view now sort technologies by what they are instead of putting everything that doesn't fit a category into Frontend - e.g. Keycloak, Auth0, xUnit, .NET libraries, payment and integration tools now go to Backend.",
+      "Java, PHP, Python and .NET frameworks are now listed under Backend instead of a separate Java frameworks section.",
+      "New summary sections: Message Brokers (Kafka, RabbitMQ, SQS...), Clouds and DevOps (Docker, Kubernetes, CI/CD, Terraform, monitoring). Containerization and CI/CD are merged into DevOps.",
+      "IDEs, collaboration tools (Jira, Slack...) and low-code platforms are no longer added to the summary.",
+    ],
+  },
   {
     date: "2026-10-08",
     items: [
